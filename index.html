@@ -1,120 +1,130 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="hi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Chhota Bheem - Live Drawing</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chhota Bheem Style Live Drawing</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:linear-gradient(180deg,#07112d,#111827);color:#fff;font-family:Arial,sans-serif;min-height:100vh}
-.wrap{min-height:100vh;padding:18px 12px 28px;display:flex;flex-direction:column;align-items:center}
-h1{font-size:clamp(25px,7vw,46px);margin:8px 0 4px;text-align:center}
-#status{font-size:18px;color:#fde68a;text-align:center;margin:5px 0 12px}
-.progress{width:min(92vw,680px);height:12px;border:2px solid #fff;border-radius:20px;overflow:hidden;margin-bottom:12px}
-#bar{height:100%;width:0;background:linear-gradient(90deg,#f59e0b,#ef4444,#22c55e)}
-.card{width:min(96vw,720px);background:#fff;border-radius:18px;padding:8px;box-shadow:0 12px 35px #0008}
-canvas{display:block;width:100%;height:auto;border-radius:12px;background:#f7fbff}
-#note{text-align:center;opacity:.85;margin:12px 0;font-size:15px}
-button{display:none;border:0;border-radius:12px;padding:12px 20px;font-weight:bold;font-size:16px}
+body{margin:0;background:linear-gradient(180deg,#050b22,#121a31);color:white;font-family:Arial,sans-serif}
+.page{min-height:100vh;padding:14px 10px 30px;text-align:center}
+h1{font-size:clamp(25px,7vw,44px);margin:8px 0}
+#status{font-size:clamp(18px,5vw,28px);color:#ffe58a;margin:4px 0 12px}
+.track{height:13px;border:2px solid white;border-radius:20px;overflow:hidden;max-width:680px;margin:0 auto 14px}
+#bar{height:100%;width:0;background:linear-gradient(90deg,#ff9d00,#ef4444,#22c55e)}
+.board{background:#fff;border-radius:24px;padding:10px;max-width:720px;margin:auto;box-shadow:0 15px 45px #0008}
+canvas{width:100%;display:block;border-radius:16px;background:#f7fbff}
+#caption{margin:12px auto;font-size:16px;opacity:.9}
+button{display:none;border:0;border-radius:14px;padding:13px 24px;font-size:18px;font-weight:bold}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="page">
 <h1>🎨 Chhota Bheem Drawing</h1>
 <div id="status">Drawing बन रही है… 03:00</div>
-<div class="progress"><div id="bar"></div></div>
-<div class="card"><canvas id="canvas" width="700" height="700"></canvas></div>
-<div id="note">नीचे drawing अभी बनती हुई दिखाई दे रही है — पेज खुला रखें।</div>
+<div class="track"><div id="bar"></div></div>
+<div class="board"><canvas id="c" width="700" height="760"></canvas></div>
+<div id="caption">हर हिस्सा धीरे-धीरे canvas पर बनता हुआ दिखाई देगा।</div>
 <button id="again" onclick="location.reload()">🔄 फिर से बनाएं</button>
 </div>
 
 <script>
-const c=document.getElementById('canvas'),ctx=c.getContext('2d');
-const W=700,H=700,total=180000;
-const start=performance.now();
+const c=document.getElementById("c"),g=c.getContext("2d");
+const TOTAL=180000, start=performance.now();
 
-function setup(){
- ctx.fillStyle="#f7fbff";ctx.fillRect(0,0,W,H);
- // light sketch guide
- ctx.strokeStyle="#d9e3ef";ctx.lineWidth=2;
- ctx.setLineDash([7,8]);ctx.beginPath();ctx.arc(350,280,125,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+function clear(){
+ g.fillStyle="#f7fbff";g.fillRect(0,0,700,760);
+ g.fillStyle="#b7e58b";g.fillRect(0,710,700,50);
 }
-function strokePath(points, t, duration, style="#111", width=8){
- let p=Math.max(0,Math.min(1,(t-duration.start)/duration.len));
+function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+function shape(draw,p){
  if(p<=0)return;
- ctx.save();ctx.strokeStyle=style;ctx.lineWidth=width;ctx.lineCap="round";ctx.lineJoin="round";
- ctx.beginPath();
- let n=Math.max(2,Math.floor(points.length*p));
- ctx.moveTo(points[0][0],points[0][1]);
- for(let i=1;i<n;i++)ctx.lineTo(points[i][0],points[i][1]);
- ctx.stroke();ctx.restore();
+ g.save();g.globalAlpha=ease(Math.min(1,p));draw();g.restore();
 }
-function circle(cx,cy,r,p,fill,stroke="#111",lw=7){
- ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
- if(p>=1){ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}
- else if(p>0){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.setLineDash([8,8]);ctx.stroke();}
- ctx.restore();
+function outline(){
+ g.strokeStyle="#2a160d";g.lineWidth=8;g.lineCap="round";g.lineJoin="round";
 }
-function ellipse(cx,cy,rx,ry,p,fill,rot=0){
- if(p<=0)return;
- ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2);
- ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle="#111";ctx.lineWidth=7;ctx.stroke();ctx.restore();
+function head(p){
+ shape(()=>{
+  g.fillStyle="#f2ad62";g.beginPath();g.ellipse(350,240,118,125,0,0,Math.PI*2);g.fill();outline();g.stroke();
+  g.fillStyle="#111";g.beginPath();g.arc(350,170,105,Math.PI,Math.PI*2);g.fill();
+  g.fillStyle="#f2ad62";g.beginPath();g.ellipse(230,245,31,43,-.1,0,Math.PI*2);g.ellipse(470,245,31,43,.1,0,Math.PI*2);g.fill();outline();g.stroke();
+ },p);
 }
-function draw(elapsed){
- setup();
- const t=elapsed;
- // 0-25s: face outline
- circle(350,280,112,Math.min(1,t/25000),"#f4b36b");
- // 25-50s: hair and ears
- if(t>25000){
-   let p=Math.min(1,(t-25000)/25000);
-   ellipse(245,290,30,38,p,"#f4b36b",-0.05);ellipse(455,290,30,38,p,"#f4b36b",0.05);
-   ctx.save();ctx.globalAlpha=p;ctx.fillStyle="#111";ctx.beginPath();ctx.arc(350,220,108,Math.PI,Math.PI*2);ctx.fill();ctx.strokeStyle="#111";ctx.lineWidth=8;ctx.stroke();ctx.restore();
- }
- // 50-75s: eyes, nose, smile
- if(t>50000){
-   let p=Math.min(1,(t-50000)/25000);
-   ellipse(315,275,20,25,p,"#fff");ellipse(385,275,20,25,p,"#fff");
-   if(p>.5){ctx.fillStyle="#111";ctx.beginPath();ctx.arc(315,278,9,0,7);ctx.arc(385,278,9,0,7);ctx.fill();}
-   ctx.save();ctx.globalAlpha=p;ctx.strokeStyle="#7c3f20";ctx.lineWidth=5;ctx.lineCap="round";
-   ctx.beginPath();ctx.moveTo(350,280);ctx.lineTo(340,315);ctx.lineTo(360,315);ctx.stroke();
-   ctx.beginPath();ctx.arc(350,320,38,.15,Math.PI-.15);ctx.stroke();ctx.restore();
- }
- // 75-105s: body
- if(t>75000){
-   let p=Math.min(1,(t-75000)/30000);
-   ellipse(350,450,105,92,p,"#f4b36b");
-   ellipse(245,450,45,105,p,"#f4b36b",-0.25);ellipse(455,450,45,105,p,"#f4b36b",0.25);
- }
- // 105-135s: dhoti and waistband
- if(t>105000){
-   let p=Math.min(1,(t-105000)/30000);
-   if(p>0){
-     ctx.save();ctx.globalAlpha=p;ctx.fillStyle="#d62d20";ctx.beginPath();ctx.moveTo(270,390);ctx.lineTo(430,390);ctx.lineTo(470,545);ctx.lineTo(230,545);ctx.closePath();ctx.fill();ctx.strokeStyle="#111";ctx.lineWidth=7;ctx.stroke();
-     ctx.fillStyle="#ffd21c";ctx.fillRect(265,390,170,30);ctx.restore();
-   }
- }
- // 135-160s: legs/shoes
- if(t>135000){
-   let p=Math.min(1,(t-135000)/25000);
-   ellipse(300,560,42,100,p,"#f4b36b");ellipse(400,560,42,100,p,"#f4b36b");
-   ellipse(285,650,65,25,p,"#5b351b");ellipse(415,650,65,25,p,"#5b351b");
- }
- // 160-180s: necklace + finishing
- if(t>160000){
-   let p=Math.min(1,(t-160000)/20000);
-   ctx.save();ctx.globalAlpha=p;ctx.strokeStyle="#ffd21c";ctx.lineWidth=10;ctx.beginPath();ctx.arc(350,390,48,.2,Math.PI-.2);ctx.stroke();
-   ctx.fillStyle="#4c9b2a";ctx.fillRect(0,675,700,25);ctx.fillStyle="#fff";ctx.font="bold 20px Arial";ctx.fillText("Drawing Complete ✨",265,695);ctx.restore();
- }
+function face(p){
+ shape(()=>{
+  // eyebrows
+  outline();g.beginPath();g.moveTo(292,220);g.quadraticCurveTo(315,205,335,220);g.moveTo(365,220);g.quadraticCurveTo(385,205,408,220);g.stroke();
+  // eyes
+  g.fillStyle="#fff";g.beginPath();g.ellipse(315,255,23,30,0,0,Math.PI*2);g.ellipse(385,255,23,30,0,0,Math.PI*2);g.fill();outline();g.stroke();
+  g.fillStyle="#111";g.beginPath();g.arc(315,258,10,0,Math.PI*2);g.arc(385,258,10,0,Math.PI*2);g.fill();
+  g.fillStyle="#fff";g.beginPath();g.arc(318,254,3,0,Math.PI*2);g.arc(388,254,3,0,Math.PI*2);g.fill();
+  // nose
+  g.strokeStyle="#7b3f20";g.lineWidth=5;g.beginPath();g.moveTo(350,270);g.lineTo(341,308);g.lineTo(360,308);g.stroke();
+  // smile
+  g.beginPath();g.arc(350,315,38,.15,Math.PI-.15);g.stroke();
+ },p);
+}
+function body(p){
+ shape(()=>{
+  g.fillStyle="#f2ad62";g.beginPath();g.ellipse(350,440,105,125,0,0,Math.PI*2);g.fill();outline();g.stroke();
+  // arms
+  g.beginPath();g.ellipse(245,445,43,120,-.18,0,Math.PI*2);g.ellipse(455,445,43,120,.18,0,Math.PI*2);g.fill();g.stroke();
+ },p);
+}
+function clothes(p){
+ shape(()=>{
+  // red dhoti
+  g.fillStyle="#d82c24";g.beginPath();g.moveTo(260,385);g.lineTo(440,385);g.lineTo(475,575);g.lineTo(390,575);g.lineTo(350,470);g.lineTo(310,575);g.lineTo(225,575);g.closePath();g.fill();outline();g.stroke();
+  // yellow waistband
+  g.fillStyle="#ffd51b";g.fillRect(260,385,180,35);outline();g.strokeRect(260,385,180,35);
+  // necklace
+  g.strokeStyle="#ffd51b";g.lineWidth=10;g.beginPath();g.arc(350,390,53,.15,Math.PI-.15);g.stroke();
+  g.fillStyle="#ffd51b";g.beginPath();g.arc(350,437,9,0,Math.PI*2);g.fill();
+ },p);
+}
+function legs(p){
+ shape(()=>{
+  g.fillStyle="#f2ad62";g.beginPath();g.ellipse(300,610,46,105,0,0,Math.PI*2);g.ellipse(400,610,46,105,0,0,Math.PI*2);g.fill();outline();g.stroke();
+  g.fillStyle="#60381e";g.beginPath();g.ellipse(285,710,70,27,0,0,Math.PI*2);g.ellipse(415,710,70,27,0,0,Math.PI*2);g.fill();outline();g.stroke();
+ },p);
+}
+function details(p){
+ shape(()=>{
+  // wrist bands
+  g.fillStyle="#ffd51b";g.fillRect(210,475,32,12);g.fillRect(458,475,32,12);
+  // belt ornament
+  g.fillStyle="#ffd51b";g.beginPath();g.arc(350,402,8,0,Math.PI*2);g.fill();
+  // ground
+  g.fillStyle="#4e9d2d";g.fillRect(0,735,700,25);
+  g.fillStyle="#fff";g.font="bold 21px Arial";g.fillText("Drawing Complete ✨",260,755);
+ },p);
+}
+function render(ms){
+ clear();
+ head(ms/30000);
+ face((ms-30000)/25000);
+ body((ms-55000)/30000);
+ clothes((ms-85000)/30000);
+ legs((ms-115000)/30000);
+ details((ms-150000)/30000);
 }
 function loop(now){
- const elapsed=Math.min(total,now-start), left=Math.max(0,total-elapsed);
- const sec=Math.ceil(left/1000), mm=String(Math.floor(sec/60)).padStart(2,'0'), ss=String(sec%60).padStart(2,'0');
- document.getElementById('status').textContent=elapsed<total ? `Drawing बन रही है… ${mm}:${ss}` : "🎉 Drawing पूरी हो गई!";
- document.getElementById('bar').style.width=(elapsed/total*100)+"%";
- draw(elapsed);
- if(elapsed<total) requestAnimationFrame(loop);
- else {document.getElementById('note').textContent="Chhota Bheem-style coding drawing तैयार है!";document.getElementById('again').style.display="inline-block";}
+ let e=Math.min(TOTAL,now-start), left=Math.max(0,TOTAL-e);
+ let s=Math.ceil(left/1000);
+ document.getElementById("status").textContent=e<TOTAL?
+   `Drawing बन रही है… ${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`:
+   "🎉 Drawing पूरी हो गई!";
+ document.getElementById("bar").style.width=(e/TOTAL*100)+"%";
+ let step=e<30000?"चेहरा और सिर बन रहा है…":
+          e<55000?"आँखें, भौंहें और मुस्कान…":
+          e<85000?"शरीर और हाथ बन रहे हैं…":
+          e<115000?"लाल-पीला costume बन रहा है…":
+          e<150000?"पैर और जूते बन रहे हैं…":"आखिरी details…";
+ document.getElementById("caption").textContent=step;
+ render(e);
+ if(e<TOTAL) requestAnimationFrame(loop);
+ else document.getElementById("again").style.display="inline-block";
 }
 requestAnimationFrame(loop);
 </script>
