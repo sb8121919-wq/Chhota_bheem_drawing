@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chhota Bheem Drawing</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#070b18;color:#fff;font-family:Arial,sans-serif;overflow:hidden}
+#loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;
+background:radial-gradient(circle,#172554,#020617);z-index:10}
+h1{font-size:clamp(28px,7vw,60px);margin:0 0 12px;text-align:center}
+#timer{font-size:24px;color:#fde68a}.bar{width:min(80vw,500px);height:18px;border:2px solid #fff;border-radius:20px;overflow:hidden;margin:22px}
+#fill{height:100%;width:0;background:linear-gradient(90deg,#f59e0b,#ef4444,#22c55e)}
+#hint{opacity:.8;text-align:center}
+#app{display:none;min-height:100vh;padding:20px;text-align:center;background:linear-gradient(#111827,#312e81)}
+canvas{max-width:95vw;width:700px;border-radius:20px;background:#fff;box-shadow:0 0 35px #0008}
+button{padding:12px 22px;border:0;border-radius:12px;font-size:17px;font-weight:bold;margin:10px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="loader">
+<h1>🎨 Chhota Bheem Drawing</h1>
+<div id="timer">Drawing तैयार हो रही है… 03:00</div>
+<div class="bar"><div id="fill"></div></div>
+<div id="hint">कृपया पेज खुला रखें — 3 मिनट का animated drawing process चल रहा है।</div>
+</div>
+<div id="app">
+<h1>🖌️ Chhota Bheem — Coding Drawing</h1>
+<p>यह drawing JavaScript Canvas से बनाई गई है।</p>
+<canvas id="c" width="700" height="700"></canvas><br>
+<button onclick="location.reload()">🔄 फिर से Drawing देखें</button>
+</div>
+<script>
+const total=180, start=Date.now(), timer=document.getElementById('timer'), fill=document.getElementById('fill');
+const canvas=document.getElementById('c'),x=canvas.getContext('2d');
+function draw(progress){
+  x.clearRect(0,0,700,700);
+  x.fillStyle="#dff3ff";x.fillRect(0,0,700,700);
+  x.fillStyle="#8bd450";x.fillRect(0,560,700,140);
+  x.fillStyle="#4c9b2a";x.font="bold 28px Arial";x.fillText("Coding से बनती Drawing",220,625);
+  const p=Math.min(progress,1);
+  x.save(); x.globalAlpha=p;
+  // hair
+  x.fillStyle="#111";x.beginPath();x.arc(350,260,125,0,Math.PI*2);x.fill();
+  // face
+  x.fillStyle="#f4b36b";x.beginPath();x.arc(350,285,105,0,Math.PI*2);x.fill();
+  // ears
+  x.beginPath();x.arc(242,290,27,0,Math.PI*2);x.arc(458,290,27,0,Math.PI*2);x.fill();
+  // hair top
+  x.fillStyle="#111";x.beginPath();x.arc(350,220,105,Math.PI,Math.PI*2);x.fill();
+  // eyes
+  x.fillStyle="#fff";x.beginPath();x.arc(315,275,18,0,Math.PI*2);x.arc(385,275,18,0,Math.PI*2);x.fill();
+  x.fillStyle="#111";x.beginPath();x.arc(315,277,8,0,Math.PI*2);x.arc(385,277,8,0,Math.PI*2);x.fill();
+  // nose + smile
+  x.strokeStyle="#7c3f20";x.lineWidth=5;x.beginPath();x.moveTo(350,280);x.lineTo(340,315);x.lineTo(360,315);x.stroke();
+  x.beginPath();x.arc(350,320,38,0.15,Math.PI-0.15);x.stroke();
+  // red dhoti
+  x.fillStyle="#d62d20";x.beginPath();x.moveTo(270,390);x.lineTo(430,390);x.lineTo(470,545);x.lineTo(230,545);x.closePath();x.fill();
+  // yellow waistband
+  x.fillStyle="#ffd21c";x.fillRect(265,390,170,30);
+  // body
+  x.fillStyle="#f4b36b";x.beginPath();x.ellipse(350,440,100,80,0,0,Math.PI*2);x.fill();
+  // arms
+  x.beginPath();x.ellipse(235,445,45,105,-.25,0,Math.PI*2);x.ellipse(465,445,45,105,.25,0,Math.PI*2);x.fill();
+  // legs
+  x.beginPath();x.ellipse(300,555,42,100,0,0,Math.PI*2);x.ellipse(400,555,42,100,0,0,Math.PI*2);x.fill();
+  // shoes
+  x.fillStyle="#5b351b";x.beginPath();x.ellipse(285,650,65,25,0,0,Math.PI*2);x.ellipse(415,650,65,25,0,0,Math.PI*2);x.fill();
+  // necklace
+  x.strokeStyle="#ffd21c";x.lineWidth=10;x.beginPath();x.arc(350,390,48,.2,Math.PI-.2);x.stroke();
+  x.restore();
+}
+function loop(){
+ const elapsed=(Date.now()-start)/1000, left=Math.max(0,total-elapsed);
+ timer.textContent="Drawing तैयार हो रही है… "+String(Math.floor(left/60)).padStart(2,'0')+":"+String(Math.floor(left%60)).padStart(2,'0');
+ fill.style.width=Math.min(100,elapsed/total*100)+"%";
+ draw(Math.min(1,elapsed/total));
+ if(elapsed<total) requestAnimationFrame(loop);
+ else {document.getElementById('loader').style.display='none';document.getElementById('app').style.display='block';draw(1);}
+}
+loop();
+</script>
+</body>
+</html>
